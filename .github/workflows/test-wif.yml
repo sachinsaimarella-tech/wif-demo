@@ -1,0 +1,22 @@
+name: GCP Keyless Auth Test
+on: [push]
+
+jobs:
+  test-auth:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # REQUIRED for Workload Identity
+
+    steps:
+    - uses: 'actions/checkout@v4'
+
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        # Full path to your provider
+        workload_identity_provider: 'projects/609616681569/locations/global/workloadIdentityPools/sachin-demo-pool/providers/github-provider'
+        service_account: 'github-actions-sa@testingmylogin.iam.gserviceaccount.com'
+
+    - name: 'Verify Login'
+      run: 'gcloud auth list'
