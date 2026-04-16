@@ -1,22 +1,44 @@
-name: GCP Keyless Auth Test
+name: GCP Keyless Auth Demo
 on: [push]
 
 jobs:
   test-auth:
     runs-on: ubuntu-latest
+    
+    # These permissions are CRITICAL for Workload Identity Federation
     permissions:
       contents: 'read'
-      id-token: 'write' # REQUIRED for Workload Identity
+      id-token: 'write'
 
     steps:
-    - uses: 'actions/checkout@v4'
+    - name: Checkout Repository
+      uses: 'actions/checkout@v4'
 
-    - id: 'auth'
+    - name: Authenticate to Google Cloud
+      id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
-        # Full path to your provider
+        # Using your specific project number and pool details
         workload_identity_provider: 'projects/609616681569/locations/global/workloadIdentityPools/sachin-demo-pool/providers/github-provider'
         service_account: 'github-actions-sa@testingmylogin.iam.gserviceaccount.com'
 
-    - name: 'Verify Login'
-      run: 'gcloud auth list'
+    - name: 'Prove Identity and Access'
+      run: |
+        echo "--------------------------------------------------------"
+        echo "Step 1: Verify which account is active"
+        echo "--------------------------------------------------------"
+        gcloud config get-value account
+        
+        echo ""
+        echo "--------------------------------------------------------"
+        echo "Step 2: List Cloud Storage Buckets (Proves API access)"
+        echo "--------------------------------------------------------"
+        # This will only work because the Service Account has the 'Viewer' role
+        gcloud storage buckets list
+        
+        echo ""
+        echo "--------------------------------------------------------"
+        echo "Step 3: Check Authentication Method"
+        echo "--------------------------------------------------------"
+        # This confirms we are using a temporary credential file, not a static key
+        echo "CREDENTIAL_FILE: $GOOGLE_APPLICATION_CREDENTIALS"
